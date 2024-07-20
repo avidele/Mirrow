@@ -1,0 +1,1 @@
+AddTest(variable_traits)
