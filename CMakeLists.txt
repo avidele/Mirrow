@@ -5,9 +5,13 @@ project(mirrow
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-aux_source_directory(src mirrow_src)
-
+file(GLOB_RECURSE mirrow_src "./src/*.cpp")
 file(GLOB_RECURSE mirrow_header_files "./include/*.hpp")
+
+if(NOT mirrow_src)
+    file(WRITE ${CMAKE_BINARY_DIR}/dummy.cpp "// Dummy source file\n")
+    list(APPEND mirrow_src ${CMAKE_BINARY_DIR}/dummy.cpp)
+endif()
 
 add_library(mirrow STATIC ${mirrow_src} ${mirrow_header_files})
 target_include_directories(mirrow PUBLIC ./include)
