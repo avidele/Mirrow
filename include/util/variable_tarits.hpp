@@ -26,6 +26,7 @@ struct basic_variable_traits {
     using type = variable_type_t<T>;
     static constexpr bool is_member = std::is_member_pointer_v<T>;
 };
+
 }  // namespace internal
 template <typename T>
 struct variable_traits;
@@ -50,4 +51,4 @@ struct variable_pointer_traits : variable_traits<decltype(V)> {};
 template <auto V>
 using variable_pointer_traits = detail::variable_pointer_traits<V>;
 
-}  // namespace mirror::util
+}

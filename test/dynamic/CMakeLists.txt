@@ -1,0 +1,2 @@
+AddTest(object)
+AddTest(register)

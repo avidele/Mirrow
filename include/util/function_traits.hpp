@@ -1,5 +1,6 @@
 #pragma once
 
+#include <tuple>
 #include <type_traits>
 namespace mirror::util {
 namespace detail {
@@ -32,7 +33,7 @@ namespace detail{
     template <typename Ret, typename... Args>
     struct basic_function_traits<Ret(Args...)> {
         using return_type = Ret;
-        // using args = std::tuple<Args...>;
+        using args = std::tuple<Args...>;
     };
 }
 
@@ -49,19 +50,21 @@ struct function_traits<Ret(Args...)> : detail::basic_function_traits<Ret(Args...
 };
 
 template <typename Ret, typename... Args, typename Class>
-struct function_traits<Ret(Class::*)(Args...)> : detail::basic_function_traits<Ret(Class::*)(Args...)>
+struct function_traits<Ret(Class::*)(Args...)> : detail::basic_function_traits<Ret(Args...)>
 {
     using type = Ret(Class::*)(Args...);
     using pointer = Ret (Class::*)(Args...);
+    using class_type = Class;    
     static constexpr bool is_member = true;
     static constexpr bool is_const = false;
 };
 
 template <typename Ret, typename... Args, typename Class>
-struct function_traits<Ret(Class::*)(Args...) const> : detail::basic_function_traits<Ret(Class::*)(Args...) const>
+struct function_traits<Ret(Class::*)(Args...) const> : detail::basic_function_traits<Ret(Args...) const>
 {
     using type = Ret(Class::*)(Args...) const;
     using pointer = Ret (Class::*)(Args...) const;
+    using class_type = Class;  
     static constexpr bool is_member = true;
     static constexpr bool is_const = true;
 };
