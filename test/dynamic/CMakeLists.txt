@@ -1,2 +1,2 @@
-AddTest(object)
+AddTest(any)
 AddTest(register)

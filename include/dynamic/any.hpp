@@ -1,8 +1,25 @@
+#pragma once
 #include <algorithm>
 #include <concepts>
 #include <iostream>
+#include <type_traits>
 
 namespace mirror::dynamic{
+
+   struct type_info {
+        std::string name;
+        size_t id;
+        const bool isConst;
+        const bool isLValueReference;
+        const bool isRValueReference;
+        const bool isPointer;
+        const bool isClass;
+        const bool copyConstructible;
+        const bool copyAssignable;
+        const bool moveConstructible;
+        const bool moveAssignable;
+        size_t removePointerType;
+    };
     struct any_ops {
     using copy_fn = void*(*)(void*);
     using move_fn = void*(*)(void*);
@@ -16,7 +33,7 @@ namespace mirror::dynamic{
 };
 
 template <typename T>
-any_ops& any_ops_for() {
+any_ops& obtain_any_ops() {
     static any_ops ops = {
         [](void* data) -> void* {
             return new T(*static_cast<T*>(data));
@@ -58,8 +75,32 @@ public:
     template<typename T>
     T& cast();
 
+    [[nodiscard]] const void* data() const { return data_; }
 private:
     void* data_ = nullptr;
-
+    any_ops* ops_ = nullptr;
 };
+
+template <typename T>
+any::any(T&& other) noexcept
+    : data_(new std::decay_t<T>(std::forward<T>(other))),
+      ops_(&obtain_any_ops<T>()) {}
+
+template <typename T>
+any& any::operator=(T&& other) {
+    if (data_ != nullptr) {
+        ops_->destroy(data_);
+    }
+    data_ = new std::decay_t<T>(std::forward<T>(other));
+    ops_ = &obtain_any_ops<T>();
+    return *this;
+}
+
+template <typename T>
+T& any::cast() {
+    if (ops_ == nullptr) {
+        throw std::runtime_error("No data stored in any");
+    }
+    return *static_cast<T*>(data_);
+}
 }
