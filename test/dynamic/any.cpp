@@ -1,8 +1,8 @@
 #include "iostream"
+#include <string>
 #include <string_view>
-#include <type_traits>
 #include "dynamic/any.hpp"
-
+#include <any>
 using namespace mirror::dynamic;
 enum class MyEnum {
     STRING,
@@ -24,21 +24,70 @@ struct C{
         std::cout << name << " says " << message << std::endl;}
 };
 
+struct AnyTestStruct3 {
+    std::string value;
+    bool heapObjectAllocated;
+    int* heapObject;
+
+    AnyTestStruct3(std::string inValue, int inHeapObjValue)
+        : value(std::move(inValue))
+        , heapObjectAllocated(true)
+        , heapObject(new int(inHeapObjValue))
+    {
+    }
+
+    ~AnyTestStruct3()
+    {
+        if (heapObjectAllocated) {
+            delete heapObject;
+        }
+    }
+
+    AnyTestStruct3(AnyTestStruct3&& inOther) noexcept
+        : value(std::move(inOther.value))
+        , heapObjectAllocated(inOther.heapObjectAllocated)
+        , heapObject(inOther.heapObject)
+    {
+        inOther.heapObjectAllocated = false;
+        inOther.heapObject = nullptr;
+    }
+};
+
 int main()
 {
-    mirror::dynamic::any a = 5;
-    mirror::dynamic::any b = std::string("Hello");
-    mirror::dynamic::any c = MyEnum::STRING;
-    mirror::dynamic::any d = A(5);
-    mirror::dynamic::any e = C{"John", 25};
+    // any a = 1;
+    // any b = std::string("Hello");
+    // // any c = b;
+    // any d = C{"John", 25};
+    // std::string name = "John";
+    // any e = name;
 
-    any e2 = e;
-    static_assert(std::is_same_v<decltype(a.cast<int>()), int&>);
-    mirror::dynamic::any f = std::move(a);
-    mirror::dynamic::any g = std::move(b);
-    mirror::dynamic::any h = std::move(c);
-    mirror::dynamic::any i = std::move(d);
-    mirror::dynamic::any j = std::move(e);
+    // const any f = 1;
+    // std::cout << f.cast<int>() << std::endl;
 
-    return 0;
+    // C c0 = C("John", 25);
+    // any g = std::move(c0);
+    // std::cout << g.cast<C>().name << std::endl;
+
+    // constexpr auto h = 1;
+    // any i = h;
+    // std::cout << i.cast<const int>() << std::endl;
+
+    // const any j = AnyTestStruct3("Hello", 5);
+    // any k(333);
+    // k = 33;
+    // std::cout << k.cast<int>() << std::endl;
+
+    int value = 0;
+    any l = std::ref(value);
+    l.cast<int&>() = 5;
+    std::cout << l.cast<int>() << " " << value << std::endl;
+
+    int value2 = 0;
+    any m(std::ref(value2));
+    m.cast<int&>() = 5;
+    float f0 = 1.0f;
+    m = std::ref(f0);
+    m.cast<float&>() = 2.0f;
+    std::cout << m.cast<float&>() << " " << f0 << std::endl;
 }

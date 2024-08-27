@@ -41,6 +41,13 @@ template <typename Func>
 struct function_traits;
 
 template <typename Ret, typename... Args>
+struct function_traits<Ret(*)(Args...)>: detail::basic_function_traits<Ret(Args...)> {
+    using type = Ret(*)(Args...);
+    static constexpr bool is_member = false;
+    static constexpr bool is_const = false;
+};
+
+template <typename Ret, typename... Args>
 struct function_traits<Ret(Args...)> : detail::basic_function_traits<Ret(Args...)>
 {
     using type = Ret(Args...);

@@ -6,8 +6,8 @@ any::any(const any& other) {
         data_ = nullptr;
         ops_ = nullptr;
     } else {
-        data_ = ops_->copy(other.data_);
         ops_ = other.ops_;
+        data_ = ops_->copy(other.data_);
     }
 }
 
