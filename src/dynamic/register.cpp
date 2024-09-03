@@ -20,6 +20,10 @@ global_registry registry::global() {
 
 class_type& registry::emplace_class(std::string_view name, class_type::construct_params&& params) {
     classes_.emplace(name, class_type(std::move(params)));
-    
     return classes_.at(name);
+}
+
+enum_type& registry::emplace_enum(std::string_view name, enum_type::construct_params&& params) {
+    enums_.emplace(name, enum_type(std::move(params)));
+    return enums_.at(name);
 }

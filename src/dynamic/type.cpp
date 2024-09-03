@@ -142,6 +142,53 @@ member_function_type& class_type::emplace_member_function(
     return member_functions_.at(name);
 }
 
+const variable_type& class_type::get_static_variable(std::string_view name) const {
+    const auto iter = static_variables_.find(name);
+    if (iter == static_variables_.end()) {
+        throw std::runtime_error("Variable not found");
+    }
+    return iter->second;
+}
+
+const function_type& class_type::get_static_function(std::string_view name) const {
+    const auto iter = static_functions_.find(name);
+    if (iter == static_functions_.end()) {
+        throw std::runtime_error("Function not found");
+    }
+    return iter->second;
+}
+
+const member_variable_type& class_type::get_member_variable(std::string_view name) const {
+    const auto iter = member_variables_.find(name);
+    if (iter == member_variables_.end()) {
+        throw std::runtime_error("Variable not found");
+    }
+    return iter->second;
+}
+
+const constructor_type& class_type::get_constructor(std::string_view name) const {
+    const auto iter = constructors_.find(name);
+    if (iter == constructors_.end()) {
+        throw std::runtime_error("Constructor not found");
+    }
+    return iter->second;
+}
+
+const member_function_type& class_type::get_member_function(std::string_view name) const {
+    const auto iter = member_functions_.find(name);
+    if (iter == member_functions_.end()) {
+        throw std::runtime_error("Function not found");
+    }
+    return iter->second;
+}
+
+const destructor_type& class_type::get_destructor() const {
+    if(!destructor_.has_value()){
+        throw std::runtime_error("Destructor not found");
+    }
+    return destructor_.value();
+}
+
 variable_type::variable_type(construct_params&& params)
     : type(params.name),
       memory_size_(params.memory_size),
@@ -201,4 +248,43 @@ any member_variable_type::get_value(any* object) const {
 
 void member_variable_type::set_value(any* object, any* value) const {
     setter_(object, value);
+}
+
+any enum_item::get() const{
+    return getter_();
+}
+
+bool enum_item::compare(any* other) const {
+    return comparer_(other);
+}
+
+enum_item::enum_item(construct_params&& params)
+    : type(params.name),
+      getter_(params.getter_),
+      comparer_(params.comparer_) {}
+
+enum_type::enum_type(construct_params&& params)
+    : type(params.name_),
+      type_info_(params.type_info_) {}
+
+enum_item& enum_type::emplace_item(std::string_view name, enum_item::construct_params&& params) {
+    enum_values_.emplace(name, enum_item(std::move(params)));
+    return enum_values_.at(name);
+}
+
+const enum_type& enum_type::get(std::string_view name) {
+    const auto& enums = registry::instance().enums_;
+    const auto iter = enums.find(name);
+    if (iter == enums.end()) {
+        throw std::runtime_error("Enum not found");
+    }
+    return iter->second;
+}
+
+const enum_item& enum_type::get_item(std::string_view name) const {
+    const auto iter = enum_values_.find(name);
+    if (iter == enum_values_.end()) {
+        throw std::runtime_error("Enum item not found");
+    }
+    return iter->second;
 }

@@ -95,6 +95,64 @@ private:
     caller caller_;
 };
 
+class enum_item final : public type {
+public:
+    ~enum_item() override = default;
+    any get() const;
+    bool compare(any* other) const;
+
+private:
+    friend class enum_type;
+    template <typename C>
+    friend class enum_registry;
+
+    using getter = std::function<any()>;
+    using comparer = std::function<bool(any*)>;
+
+    struct construct_params {
+        std::string_view name;
+        getter getter_;
+        comparer comparer_;
+    };
+
+    explicit enum_item(construct_params&& params);
+    getter getter_;
+    comparer comparer_;
+};
+
+class enum_type final : public type {
+public:
+    ~enum_type() override = default;
+    template <typename T>
+    requires std::is_enum_v<T>
+    static const enum_type* find();
+
+    template <typename T>
+    requires std::is_enum_v<T>
+    static const enum_type& get();
+
+    static const enum_type& get(std::string_view name);
+    static const enum_type& find(std::string_view name);
+
+    enum_item& emplace_item(std::string_view name,
+                            enum_item::construct_params&& params);
+
+    const enum_item& get_item(std::string_view name) const;
+
+private:
+    static std::unordered_map<size_t, std::string_view> enum_type_map_;
+    friend class registry;
+
+    struct construct_params {
+        std::string_view name_;
+        const type_info* type_info_;
+    };
+
+    explicit enum_type(construct_params&& params);
+    const type_info* type_info_;
+    std::unordered_map<std::string_view, enum_item> enum_values_;
+};
+
 class member_variable_type final : public type {
 public:
     ~member_variable_type() override = default;
@@ -219,6 +277,15 @@ public:
     static const class_type& get(const std::string_view& name);
     static const class_type& get(size_t type_id);
 
+    const variable_type& get_static_variable(std::string_view name) const;
+    const function_type& get_static_function(std::string_view name) const;
+    const member_variable_type& get_member_variable(
+        std::string_view name) const;
+    const constructor_type& get_constructor(std::string_view name) const;
+    const member_function_type& get_member_function(
+        std::string_view name) const;
+    const destructor_type& get_destructor() const;
+
 private:
     friend class registry;
     template <typename C>
@@ -232,7 +299,8 @@ private:
         class_getter getter_;
         std::optional<std::function<any()>> default_object_creator;
         std::optional<destructor_type::construct_params> destructor_params;
-        std::optional<constructor_type::constructor_params> default_constructor_params;
+        std::optional<constructor_type::constructor_params>
+            default_constructor_params;
     };
 
     constructor_type& emplace_constructor(
@@ -341,7 +409,8 @@ template <typename C, typename... Args>
 any member_function_type::call(C&& object, Args&&... args) const {
     std::array<any, sizeof...(Args)> arguments = {
         any(std::forward<Args>(args))...};
-    any any_object = any(std::forward<C>(object));
+    any any_object = std::ref(std::forward<C>(object));
     return caller_(&any_object, arguments.data(), arguments.size());
 }
+
 }  // namespace mirror::dynamic

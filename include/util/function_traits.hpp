@@ -35,6 +35,12 @@ namespace detail{
         using return_type = Ret;
         using args = std::tuple<Args...>;
     };
+
+    template <typename Ret, typename... Args>
+    struct basic_function_traits<Ret(Args...) const> {
+        using return_type = Ret;
+        using args = std::tuple<Args...>;
+    };
 }
 
 template <typename Func>

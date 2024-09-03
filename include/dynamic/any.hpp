@@ -160,7 +160,9 @@ T& any::cast() const {
     }
     using non_ref_type = std::remove_reference_t<T>;
     if(type_->is_lvalue_reference){
-        return *static_cast<std::add_const_t<std::reference_wrapper<std::remove_reference_t<T>>>*>(data_);
+        auto ref_wrap = static_cast<std::add_const_t<std::reference_wrapper<std::remove_reference_t<T>>>*>(data_);
+        // std::cout << "Reference Wrapper Address: " << &(ref_wrap->get()) << std::endl;
+        return ref_wrap->get();
     }
     return *static_cast<non_ref_type*>(data_);
 }
